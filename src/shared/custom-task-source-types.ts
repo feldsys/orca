@@ -5,9 +5,9 @@ import { z } from 'zod'
 // Sources are read from ~/.orca/task-sources.json.
 
 export const CustomTaskSourceConfigSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  command: z.string().min(1),
+  id: z.string().trim().min(1),
+  name: z.string().trim().min(1),
+  command: z.string().trim().min(1),
   args: z.array(z.string()).optional()
 })
 
