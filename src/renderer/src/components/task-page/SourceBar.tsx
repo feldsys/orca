@@ -6,6 +6,7 @@ import { X, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { LinearScopeSelector } from '@/components/linear-scope-selector'
+import { TaskPageCustomSourcePicker } from './custom/SourcePicker'
 import {
   Select,
   SelectTrigger,
@@ -226,6 +227,7 @@ export function TaskPageSourceBar({
           ) : null}
         </div>
       ) : null}
+      {taskSource === 'custom' ? <TaskPageCustomSourcePicker model={model} /> : null}
     </div>
   )
 }

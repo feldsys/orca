@@ -13,6 +13,8 @@ import { bindTaskPageJiraItemSourceContext } from './task-page-jira-item-source-
 import type { LinkedWorkItemSummary } from '@/lib/new-workspace'
 import { shouldHideTaskPageListChrome } from '@/components/task-page-list-chrome-visibility'
 import { getJiraIssueWorkspaceSeed } from './task-page-source-context'
+import type { CustomTaskItem } from '../../../shared/custom-task-source-types'
+import { buildCustomTaskComposerArgs } from './task-page/custom/custom-task-composer-args'
 export function useTaskPageComposerActions(model: TaskPageJiraListEffectsModel) {
   const {
     setTaskResumeState,
@@ -228,6 +230,14 @@ export function useTaskPageComposerActions(model: TaskPageJiraListEffectsModel) 
     },
     [openComposerForJiraItem]
   )
+  const handleUseCustomItem = useCallback(
+    (item: CustomTaskItem): void => {
+      // Why: unlike Jira, the composer keeps non-Jira linked items without a taskSourceContext,
+      // and custom commands only run locally, so there is no source context to bind.
+      openModal('new-workspace-composer', buildCustomTaskComposerArgs(item))
+    },
+    [openModal]
+  )
   const taskPageListChromeHidden = shouldHideTaskPageListChrome({
     taskSource,
     hasGitHubDetail: Boolean(dialogWorkItem),
@@ -259,6 +269,7 @@ export function useTaskPageComposerActions(model: TaskPageJiraListEffectsModel) 
   nextModel.openComposerForJiraItem = openComposerForJiraItem
   nextModel.handleUseJiraItem = handleUseJiraItem
   nextModel.taskPageListChromeHidden = taskPageListChromeHidden
-  return nextModel
+  // Why: Object.assign extends the model type without widening the stage's type assertion.
+  return Object.assign(nextModel, { handleUseCustomItem })
 }
 export type TaskPageComposerActionsModel = ReturnType<typeof useTaskPageComposerActions>

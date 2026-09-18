@@ -35,8 +35,9 @@ function getHostLabel(hostId: ExecutionHostScope, hostLabelById: HostLabelLookup
   return hostLabelById?.get(hostId) ?? getExecutionHostLabel(hostId)
 }
 
+// Why: custom sources have no host/account context; use-task-page-source-summary labels them.
 export function getTaskSourceContextSummary(args: {
-  provider: TaskProvider
+  provider: Exclude<TaskProvider, 'custom'>
   providerLabel: string
   repoContexts?: readonly TaskSourceContext[]
   hostAvailability?: readonly TaskSourceHostAvailability[]
@@ -198,6 +199,8 @@ function getProviderIdentityLabel(
       return identity.workspaceName ?? identity.workspaceId ?? null
     case 'jira':
       return identity.siteUrl ?? identity.siteId ?? null
+    case 'custom':
+      return null
   }
 }
 
