@@ -199,6 +199,20 @@ export function getLaunchableWorkItemDraftContent(args: {
   return args.url
 }
 
+/** The auto-submitted start prompt a custom Tasks source seeded (e.g. `/mantisPRfix <url>`), if any. */
+export function resolveSeededStartPrompt(
+  linkedWorkItem: { provider?: TaskProvider } | null | undefined,
+  note: string,
+  seededPrompt: string
+): string | null {
+  const seeded = seededPrompt.trim()
+  // Why: only custom sources seed; any other composer prompt text (folder drops, a cleared item) must not auto-submit.
+  if (!seeded || linkedWorkItem?.provider !== 'custom') {
+    return null
+  }
+  return [seeded, note.trim()].filter(Boolean).join('\n\n')
+}
+
 export function resolveQuickCreateLinkedWorkItemPrompt(
   linkedWorkItem:
     | (Pick<
@@ -216,12 +230,11 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
   note: string,
   seededPrompt = ''
 ): { prompt: string; draftPrompt: string | null } {
-  const trimmedNote = note.trim()
-  const seeded = seededPrompt.trim()
-  // Why: a Tasks-seeded prompt (custom sources, e.g. `/mantisPRfix <url>`) is the agent's start prompt.
-  if (seeded) {
-    return { prompt: [seeded, trimmedNote].filter(Boolean).join('\n\n'), draftPrompt: null }
+  const seededStartPrompt = resolveSeededStartPrompt(linkedWorkItem, note, seededPrompt)
+  if (seededStartPrompt) {
+    return { prompt: seededStartPrompt, draftPrompt: null }
   }
+  const trimmedNote = note.trim()
   const linearBlock = isLinearWorkItemReference(linkedWorkItem)
     ? buildLinearLaunchContextBlock({
         provider: linkedWorkItem?.provider,

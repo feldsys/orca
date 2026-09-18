@@ -253,6 +253,22 @@ describe('resolveQuickCreateLinkedWorkItemPrompt', () => {
       resolveQuickCreateLinkedWorkItemPrompt(item, 'note')
     )
   })
+
+  it('ignores stray composer prompt text for non-custom items', () => {
+    const item = {
+      provider: 'github' as const,
+      number: 42,
+      url: 'https://github.com/o/r/issues/42'
+    }
+    // Why: a folder drop or a cleared custom item can leave text in the composer prompt.
+    expect(resolveQuickCreateLinkedWorkItemPrompt(item, 'note', '/repo/dropped-folder')).toEqual(
+      resolveQuickCreateLinkedWorkItemPrompt(item, 'note')
+    )
+    expect(resolveQuickCreateLinkedWorkItemPrompt(null, '', '/mantisPRfix old')).toEqual({
+      prompt: '',
+      draftPrompt: null
+    })
+  })
 })
 
 describe('getLaunchableWorkItemDraftContent', () => {

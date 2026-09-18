@@ -2,6 +2,7 @@ import type { ComposerModel } from './composer-model'
 
 type FolderSubmitOrchestrationInput = Pick<
   ComposerModel,
+  | 'agentPrompt'
   | 'clearNewWorkspaceDraft'
   | 'createFolderWorkspace'
   | 'decisions'
@@ -41,6 +42,7 @@ import {
 } from '../../../../shared/tui-agent-launch-defaults'
 import { resolveInitialNativeChatSessionOptions } from '@/components/native-chat/native-chat-launch-session-options'
 import { isNativeChatTranscriptLocalReadable } from '@/lib/native-chat-transcript-readability'
+import { resolveSeededStartPrompt } from '@/lib/linked-work-item-context'
 import { translate } from '@/i18n/i18n'
 import {
   formatWorkspaceCreateError,
@@ -50,6 +52,7 @@ import { toast } from 'sonner'
 
 export function useFolderSubmitOrchestration(input: FolderSubmitOrchestrationInput) {
   const {
+    agentPrompt,
     clearNewWorkspaceDraft,
     createFolderWorkspace,
     decisions,
@@ -107,8 +110,11 @@ export function useFolderSubmitOrchestration(input: FolderSubmitOrchestrationInp
         if (isSubmissionCancelled()) {
           return
         }
+        const seededStartPrompt = agent
+          ? resolveSeededStartPrompt(submitLinkedWorkItem, note, agentPrompt)
+          : null
         const folderLaunchDraftText =
-          agent && submitLinkedWorkItem
+          agent && submitLinkedWorkItem && !seededStartPrompt
             ? resolveFolderWorkspaceLaunchDraft(submitLinkedWorkItem, note)
             : null
         const folderWorkspaceCreated = await submitFolderWorkspaceCreate({
@@ -118,6 +124,7 @@ export function useFolderSubmitOrchestration(input: FolderSubmitOrchestrationInp
           linkedWorkItem: submitLinkedWorkItem,
           linkedTaskSourceContext: taskSourceContext,
           note,
+          seededStartPrompt,
           quickAgent: agent,
           autoRenameBranchFromWork: settings?.autoRenameBranchFromWork,
           agentCmdOverrides: settings?.agentCmdOverrides,
@@ -183,6 +190,7 @@ export function useFolderSubmitOrchestration(input: FolderSubmitOrchestrationInp
       }
     },
     [
+      agentPrompt,
       clearNewWorkspaceDraft,
       createFolderWorkspace,
       canResolveFolderSmartGitHubSubmit,

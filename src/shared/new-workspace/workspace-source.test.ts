@@ -126,6 +126,19 @@ describe('workspace source policy', () => {
       kind: 'gitlab-issue',
       label: '#7 Self hosted'
     })
+    // Why: custom titles already carry the adapter's id; a `#N` prefix would repeat it.
+    expect(
+      buildWorkspaceSourceSelection({
+        linkedWorkItem: {
+          provider: 'custom',
+          type: 'issue',
+          number: 1234,
+          title: '1234 Fix login',
+          url: 'https://mantis.example.com/view.php?id=1234',
+          customIdentifier: '1234'
+        }
+      })
+    ).toMatchObject({ label: '1234 Fix login' })
     expect(shouldApplyWorkspaceSourceAutoName({ currentName: '#42', lastAutoName: 'old' })).toBe(
       true
     )

@@ -125,9 +125,8 @@ export function useQuickCreationExecution(input: QuickCreationExecutionInput) {
 
       const promptLinkedWorkItem = agent === null ? null : submitLinkedWorkItem
 
-      const seededPrompt = agent === null ? '' : agentPrompt
       const { prompt: quickPrompt, draftPrompt: quickDraftPrompt } =
-        resolveQuickCreateLinkedWorkItemPrompt(promptLinkedWorkItem, trimmedNote, seededPrompt)
+        resolveQuickCreateLinkedWorkItemPrompt(promptLinkedWorkItem, trimmedNote, agentPrompt)
 
       const {
         startupPlan,
