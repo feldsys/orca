@@ -189,6 +189,10 @@ function getAutomationSourceAvailability(
   if (!sourceContext) {
     return null
   }
+  // Why: command-based sources run only in the local Tasks view, never from automations.
+  if (sourceContext.provider === 'custom') {
+    return unavailable('source-provider-unsupported', 'Automations cannot use custom sources.')
+  }
   const availability = sourceHostAvailability?.find(
     (entry) => entry.hostId === sourceContext.hostId
   )
@@ -259,6 +263,8 @@ function getAutomationSourceProviderLabel(provider: TaskSourceContext['provider'
       return 'Linear'
     case 'jira':
       return 'Jira'
+    case 'custom':
+      return 'Custom'
   }
 }
 

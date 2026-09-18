@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Github, Gitlab } from 'lucide-react'
+import { Github, Gitlab, ListTodo } from 'lucide-react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import type { TaskProvider } from '../../../../shared/task-providers'
 import {
@@ -16,6 +16,7 @@ import { SettingsSubsectionHeader } from './SettingsFormControls'
 import { CodeHostSetupSteps, JiraSetupSteps } from './TaskSourceSimpleSetup'
 import { TaskSourceLinearSetup } from './TaskSourceLinearSetup'
 import { TaskSourceProviderCard } from './TaskSourceProviderCard'
+import { TaskSourceShowInTasksStep } from './TaskSourceShowInTasksStep'
 import {
   getStalledVisibleTaskProviders,
   resolveStickyAutoExpandedTaskProvider
@@ -89,6 +90,18 @@ const PROVIDER_META: Record<
       )
     },
     Icon: ({ className }) => <JiraIcon className={className} />
+  },
+  custom: {
+    get label() {
+      return translate('auto.components.settings.TasksPane.customLabel', 'Custom')
+    },
+    get description() {
+      return translate(
+        'auto.components.settings.TasksPane.customDescription',
+        'Command-based sources from ~/.orca/task-sources.json.'
+      )
+    },
+    Icon: ({ className }) => <ListTodo className={className} />
   }
 }
 
@@ -227,6 +240,17 @@ export function TasksPane({ settings, updateSettings }: TasksPaneProps): React.J
                     onConnected={() => void checkJiraConnection()}
                     onOpenIntegrations={() => openIntegrations(JIRA_INTEGRATION_SECTION_ID)}
                   />
+                ) : provider === 'custom' ? (
+                  // Why: custom sources have no account to connect; the JSON file is the setup.
+                  <ol className="divide-y divide-border/50">
+                    <TaskSourceShowInTasksStep
+                      index={1}
+                      providerLabel={meta.label}
+                      visible={visible}
+                      canHide={canHide}
+                      onToggleVisible={() => toggleProvider('custom')}
+                    />
+                  </ol>
                 ) : (
                   <CodeHostSetupSteps
                     providerLabel={meta.label}

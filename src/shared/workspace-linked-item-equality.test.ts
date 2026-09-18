@@ -43,5 +43,11 @@ describe('areWorkspaceLinkedItemsEqual', () => {
       false
     )
     expect(areWorkspaceLinkedItemsEqual(item, { ...item, repoId: 'repo-2' })).toBe(false)
+    expect(
+      areWorkspaceLinkedItemsEqual(
+        { ...item, provider: 'custom', customIdentifier: 'a' },
+        { ...item, provider: 'custom', customIdentifier: 'b' }
+      )
+    ).toBe(false)
   })
 })

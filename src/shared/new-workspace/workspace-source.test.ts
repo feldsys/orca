@@ -61,6 +61,16 @@ describe('workspace source policy', () => {
         url: 'https://acme.atlassian.net/browse/FUS-1'
       })
     ).toBe(true)
+    expect(
+      shouldPreserveWorkspaceSourceOnRepoChange({
+        provider: 'custom',
+        type: 'issue',
+        number: 1234,
+        title: 'Command-based source',
+        url: 'https://mantis.example.com/view.php?id=1234',
+        customIdentifier: '1234'
+      })
+    ).toBe(true)
     // Why: Jira items picked from smart search may arrive without an explicit
     // provider; preservation must still hold via URL/identifier inference.
     expect(

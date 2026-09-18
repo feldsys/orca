@@ -233,6 +233,19 @@ describe('resolveQuickCreateLinkedWorkItemPrompt', () => {
       draftPrompt: 'note\n\nhttps://github.com/acme/repo/issues/42'
     })
   })
+
+  it('auto-submits a Tasks-seeded prompt with the note below it', () => {
+    expect(
+      resolveQuickCreateLinkedWorkItemPrompt(
+        { provider: 'custom', number: 7, url: 'https://mantis.example.com/view.php?id=7' },
+        ' note ',
+        ' /mantisPRfix https://mantis.example.com/view.php?id=7 '
+      )
+    ).toEqual({
+      prompt: '/mantisPRfix https://mantis.example.com/view.php?id=7\n\nnote',
+      draftPrompt: null
+    })
+  })
 })
 
 describe('getLaunchableWorkItemDraftContent', () => {

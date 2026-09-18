@@ -91,6 +91,12 @@ export function useTaskSourceProviderReadiness(
         connected: jiraConnected,
         checking: jiraChecking,
         visible: visible.has('jira')
+      },
+      custom: {
+        connected: true,
+        checking: false,
+        unavailable: false,
+        visible: visible.has('custom')
       }
     }
   }, [

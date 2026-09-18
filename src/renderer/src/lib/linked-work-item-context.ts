@@ -213,9 +213,15 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
       > & { linkedContext?: LinkedWorkItemContext })
     | null
     | undefined,
-  note: string
+  note: string,
+  seededPrompt = ''
 ): { prompt: string; draftPrompt: string | null } {
   const trimmedNote = note.trim()
+  const seeded = seededPrompt.trim()
+  // Why: a Tasks-seeded prompt (custom sources, e.g. `/mantisPRfix <url>`) is the agent's start prompt.
+  if (seeded) {
+    return { prompt: [seeded, trimmedNote].filter(Boolean).join('\n\n'), draftPrompt: null }
+  }
   const linearBlock = isLinearWorkItemReference(linkedWorkItem)
     ? buildLinearLaunchContextBlock({
         provider: linkedWorkItem?.provider,
