@@ -1,7 +1,7 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { listCustomTaskItems, listCustomTaskSources } from './custom-task-source-runner'
 
 let dir: string
@@ -14,6 +14,20 @@ function writeSource(script: string): void {
 
 function printJson(value: unknown): string {
   return `process.stdout.write(${JSON.stringify(JSON.stringify(value))})`
+}
+
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return error instanceof Error && 'code' in error && error.code === 'EPERM'
+  }
+}
+
+async function waitForDeath(pidFile: string): Promise<void> {
+  const pid = Number(readFileSync(pidFile, 'utf8'))
+  await vi.waitFor(() => expect(isAlive(pid)).toBe(false), { timeout: 5_000 })
 }
 
 const item = { id: '1', title: 'Fix it', url: 'https://tracker.test/1' }
@@ -102,12 +116,35 @@ describe('listCustomTaskItems', () => {
     })
   })
 
-  it('times out a hanging command', async () => {
-    writeSource('setTimeout(() => {}, 60_000)')
-    expect(await listCustomTaskItems('src', undefined, { configPath, timeoutMs: 300 })).toEqual({
+  it('times out and kills the whole process tree', async () => {
+    const pidFile = join(dir, 'grandchild.pid')
+    // Why detached on Windows: libuv puts node's children in a kill-on-close job, so a plain
+    // grandchild would die with the root and hide an orphan that a pwsh adapter's child becomes.
+    writeSource(
+      `const c = require('child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore', detached: process.platform === 'win32' }); require('fs').writeFileSync(${JSON.stringify(pidFile)}, String(c.pid)); setTimeout(() => {}, 30000)`
+    )
+    expect(await listCustomTaskItems('src', undefined, { configPath, timeoutMs: 1000 })).toEqual({
       ok: false,
-      error: 'Test timed out after 0.3 s'
+      error: 'Test timed out after 1 s'
     })
+    await waitForDeath(pidFile)
+  })
+
+  it('resolves as cancelled and kills the command when aborted', async () => {
+    const pidFile = join(dir, 'root.pid')
+    writeSource(
+      `require('fs').writeFileSync(${JSON.stringify(pidFile)}, String(process.pid)); setTimeout(() => {}, 30000)`
+    )
+    const controller = new AbortController()
+    const run = listCustomTaskItems('src', undefined, {
+      configPath,
+      timeoutMs: 10_000,
+      signal: controller.signal
+    })
+    await vi.waitFor(() => expect(existsSync(pidFile)).toBe(true), { timeout: 5_000 })
+    controller.abort()
+    expect(await run).toEqual({ ok: false, error: 'cancelled' })
+    await waitForDeath(pidFile)
   })
 
   it('reports a missing command', async () => {
