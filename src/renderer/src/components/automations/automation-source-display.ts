@@ -41,6 +41,8 @@ function getProviderLabel(provider: TaskSourceContext['provider']): string {
       return 'Linear'
     case 'jira':
       return 'Jira'
+    case 'custom':
+      return 'Custom'
   }
 }
 
@@ -58,6 +60,8 @@ function getSourceIdentityLabel(sourceContext: TaskSourceContext): string | null
         return identity.workspaceName ?? identity.workspaceId ?? null
       case 'jira':
         return identity.siteUrl ?? identity.siteId ?? null
+      case 'custom':
+        return identity.sourceId ?? null
     }
   }
   return sourceContext.accountLabel ?? sourceContext.repoId ?? null

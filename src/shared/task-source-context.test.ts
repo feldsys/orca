@@ -151,6 +151,21 @@ describe('task source context', () => {
     ).toContain(encodeURIComponent('https://example.atlassian.net/OPS'))
   })
 
+  it('round-trips a stored custom source context with its source identity', () => {
+    const stored = normalizeStoredTaskSourceContext({
+      kind: 'task-source',
+      provider: 'custom',
+      projectId: 'project-1',
+      hostId: 'local',
+      providerIdentity: { provider: 'custom', sourceId: ' mantis ' }
+    })
+    expect(stored).toMatchObject({
+      provider: 'custom',
+      providerIdentity: { provider: 'custom', sourceId: 'mantis' }
+    })
+    expect(stored && getTaskSourceCacheScope(stored)).toContain(':mantis')
+  })
+
   it('drops provider identities that do not match the source provider', () => {
     expect(
       normalizeTaskSourceContext({
