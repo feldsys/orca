@@ -30,7 +30,7 @@ afterEach(() => {
 describe('listCustomTaskSources', () => {
   it('returns [] when the file is missing or empty', async () => {
     expect(await listCustomTaskSources({ configPath })).toEqual({ ok: true, sources: [] })
-    writeFileSync(configPath, '﻿  \n')
+    writeFileSync(configPath, '\uFEFF  \n')
     expect(await listCustomTaskSources({ configPath })).toEqual({ ok: true, sources: [] })
   })
 
