@@ -19,6 +19,8 @@ const MAX_STDERR_CHARS = 500
 export type CustomTaskRunnerOptions = {
   configPath?: string
   timeoutMs?: number
+  /** Aborting kills the adapter's process tree and resolves as `error: 'cancelled'`. */
+  signal?: AbortSignal
 }
 
 function getCustomTaskSourcesPath(): string {
@@ -102,7 +104,10 @@ export async function listCustomTaskItems(
       args: source.args ?? [],
       env: { ...process.env, ORCA_TASK_QUERY: query ?? '' },
       timeoutMs,
-      maxOutputBytes: MAX_OUTPUT_BYTES
+      maxOutputBytes: MAX_OUTPUT_BYTES,
+      signal: options.signal,
+      // Why: adapters (pwsh) spawn curl/python; killing only the root would orphan them.
+      terminationBarrier: true
     })
   } catch (error) {
     if (errorCode(error) === 'ENOENT') {
@@ -111,6 +116,9 @@ export async function listCustomTaskItems(
     return { ok: false, error: `${source.name} could not be started: ${String(error)}` }
   }
 
+  if (options.signal?.aborted) {
+    return { ok: false, error: 'cancelled' }
+  }
   if (result.timedOut) {
     return { ok: false, error: `${source.name} timed out after ${timeoutMs / 1000} s` }
   }
