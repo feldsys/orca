@@ -33,21 +33,40 @@ export type UpdaterSetupOptions = {
   installMode?: UpdateInstallMode
 }
 
+// Why: fork build (feldsys/orca). Every release feed is stablyai/orca, so any
+// check, download or install would replace this fork with upstream.
+export function areUpstreamUpdatesEnabled(): boolean {
+  return process.env.ORCA_ENABLE_UPSTREAM_UPDATES === '1'
+}
+
 /** Initializes electron-updater and attaches lifecycle/event bridges. */
 export class UpdaterSetup extends UpdaterDownloadInstall {
   checkForUpdates(): void {
+    if (!areUpstreamUpdatesEnabled()) {
+      return
+    }
     this.checkForUpdatesInBackground()
   }
 
   checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
+    if (!areUpstreamUpdatesEnabled()) {
+      this.sendStatus({ state: 'not-available', userInitiated: true })
+      return
+    }
     super.checkForUpdatesFromMenu(options)
   }
 
   downloadUpdate(): void {
+    if (!areUpstreamUpdatesEnabled()) {
+      return
+    }
     super.downloadUpdate()
   }
 
   quitAndInstall(): void {
+    if (!areUpstreamUpdatesEnabled()) {
+      return
+    }
     super.quitAndInstall()
   }
 
@@ -135,9 +154,7 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     if (is.dev) {
       return
     }
-    // Why: fork build (feldsys/orca). The release feed below is hard-wired to
-    // stablyai/orca, so an update would replace this fork with upstream.
-    if (process.env.ORCA_ENABLE_UPSTREAM_UPDATES !== '1') {
+    if (!areUpstreamUpdatesEnabled()) {
       return
     }
 
