@@ -2330,7 +2330,16 @@
         "linearModeHasWorktreeTooltip": "Linear tickets linked to an Orca workspace",
         "linearEmptyHasWorktree": "No Linear tickets are linked to an Orca workspace yet. Start work from a Linear issue to see it here.",
         "linearOpenAttachedWorkspace": "Open workspace attached to {{value0}}",
-        "linearWorktreesColumn": "Workspaces"
+        "linearWorktreesColumn": "Workspaces",
+        "customSourcesLoadFailed": "Couldn’t load custom task sources",
+        "customSourcesEmpty": "No custom task sources configured",
+        "customSourcesHint": "Add commands that print task JSON to {{value0}}, for example:",
+        "customSearchPlaceholder": "Search {{value0}}",
+        "customRefresh": "Refresh {{value0}}",
+        "customNoItems": "No tasks found",
+        "customNoItemsForQuery": "Try a different search.",
+        "customSourcePicker": "Task source",
+        "customTaskSource": "Custom"
       },
       "Terminal": {
         "73768427cf": "Close",
@@ -8575,7 +8584,9 @@
           "integrationsHint": "Credentials for all providers also live under",
           "integrationsLink": "Integrations",
           "skillHint": ". After Linear is connected, usage examples stay under Settings → Linear.",
-          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks."
+          "incompleteBannerBodyWithLinear": "Hide providers you do not use, or expand a card and finish its steps. For Linear: API access, the agent skill, and Show in Tasks.",
+          "customLabel": "Custom",
+          "customDescription": "Command-based sources from ~/.orca/task-sources.json."
         },
         "TerminalAppearanceSection": {
           "a14a427ae4": "Thickness of the pane divider line.",
