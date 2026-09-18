@@ -16,6 +16,7 @@ import {
   getTaskSourceContextSummary
 } from './task-source-context-summary'
 import { getRepoBackedTaskEmptyState } from '@/components/task-page-empty-state'
+import { useCustomTaskSources } from './task-page/custom/use-custom-task-sources'
 export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPreludeModel) {
   const {
     preflightStatus,
@@ -34,6 +35,8 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
     accountBackedTaskSourceHostId,
     accountBackedTaskSourceHostAvailability
   } = model
+  const customTaskSourceState = useCustomTaskSources(taskSource === 'custom')
+  const customTaskSourceName = customTaskSourceState.selectedCustomTaskSource?.name ?? null
   const taskSourceAvailabilityNoticeByProvider = useMemo<
     Partial<Record<TaskProvider, TaskSourceAvailabilityNotice>>
   >(() => {
@@ -116,6 +119,11 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
   const taskSourceContextSummary = useMemo(() => {
     const providerLabel =
       sourceOptions.find((source) => source.id === taskSource)?.label ?? taskSource
+    if (taskSource === 'custom') {
+      // Why: custom commands run in the local main process; the source name is the only context.
+      const label = [providerLabel, customTaskSourceName].filter(Boolean).join(' · ')
+      return { label, title: label }
+    }
     return getTaskSourceContextSummary({
       provider: taskSource,
       providerLabel,
@@ -132,6 +140,7 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
       jiraSiteName: selectedJiraSite?.displayName ?? selectedJiraSite?.siteUrl ?? null
     })
   }, [
+    customTaskSourceName,
     selectedJiraSite,
     selectedLinearWorkspace,
     selectedRepos.length,
@@ -184,6 +193,7 @@ export function useTaskPageSourceSummary(model: TaskPageSourceAvailabilityPrelud
   nextModel.taskSourceContextSummary = taskSourceContextSummary
   nextModel.taskSourceAvailabilityNotice = taskSourceAvailabilityNotice
   nextModel.githubEmptyState = githubEmptyState
-  return nextModel
+  // Why: Object.assign extends the model type without widening the stage's type assertion.
+  return Object.assign(nextModel, { customTaskSourceState })
 }
 export type TaskPageSourceSummaryModel = ReturnType<typeof useTaskPageSourceSummary>
