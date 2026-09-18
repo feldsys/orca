@@ -246,6 +246,13 @@ describe('resolveQuickCreateLinkedWorkItemPrompt', () => {
       draftPrompt: null
     })
   })
+
+  it('keeps the link-draft behaviour when the seeded prompt is blank', () => {
+    const item = { number: 42, url: 'https://github.com/acme/repo/issues/42' }
+    expect(resolveQuickCreateLinkedWorkItemPrompt(item, 'note', '  ')).toEqual(
+      resolveQuickCreateLinkedWorkItemPrompt(item, 'note')
+    )
+  })
 })
 
 describe('getLaunchableWorkItemDraftContent', () => {
