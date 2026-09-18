@@ -20,7 +20,10 @@ import {
   type StructuredAgentSessionHostHandoff
 } from './structured-agent-session-host-handoff'
 import { StructuredAgentSessionHostRuntimeState } from './structured-agent-session-host-runtime-state'
-import { attachStructuredAgentSession } from './structured-agent-session-attach-orchestration'
+import {
+  attachStructuredAgentSession,
+  attachStructuredAgentSessionInTransition
+} from './structured-agent-session-attach-orchestration'
 import {
   createStructuredAgentSessionHolds,
   evictOwnedStructuredAgentSessions,
@@ -52,6 +55,7 @@ import type { StructuredAgentSessionStatusSubscriber } from './structured-agent-
 import { StructuredAgentSessionEventRecovery } from './structured-agent-session-event-recovery'
 import { StructuredAgentSessionBackgroundTaskChannel } from './structured-agent-session-background-task-channel'
 import { StructuredAgentSessionClientDelivery } from './structured-agent-session-client-delivery'
+import { ensureStructuredAgentSessionReady } from './structured-agent-session-send-readiness'
 export type { StructuredAgentSessionHostDeps } from './structured-agent-session-host-types'
 
 export class StructuredAgentSessionHost {
@@ -115,8 +119,14 @@ export class StructuredAgentSessionHost {
     })
     this.holds = createStructuredAgentSessionHolds(this.lifetimeContext(), {
       reconcileLeases: this.reconcileLeases,
-      attach: (params) => this.attach({ callerKey: 'trusted-local:surface-hold' }, params),
-      close: (sessionId) => this.close(sessionId)
+      attach: (params) =>
+        attachStructuredAgentSessionInTransition(
+          this.attachContext(),
+          'trusted-local:surface-hold',
+          params
+        ),
+      close: (sessionId) => this.close(sessionId),
+      serialize: (sessionId, task) => this.tasks.serialize(sessionId, task)
     })
     this.restore = createStructuredAgentSessionHostRestore(deps, this.sessions, () => this.now(), {
       reconcile: this.reconcileLeases,
@@ -270,7 +280,9 @@ export class StructuredAgentSessionHost {
       flushStreamedEvents: this.flushStreamedEvents,
       requireSession: (sessionId) => this.requireSession(sessionId),
       serialize: (sessionId, task) => this.serialize(sessionId, task),
-      now: () => this.now()
+      now: () => this.now(),
+      ensureSessionReady: (sessionId) =>
+        ensureStructuredAgentSessionReady(this.attachContext(), sessionId)
     }
   }
 

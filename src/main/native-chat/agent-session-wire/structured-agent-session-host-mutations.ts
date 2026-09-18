@@ -41,6 +41,8 @@ export type StructuredAgentSessionMutationContext = {
   requireSession: (sessionId: string) => StructuredAgentSessionHostSession
   serialize: <T>(sessionId: string, task: () => Promise<T>) => Promise<T>
   now: () => number
+  /** Runs inside the keyed transition before a new message reaches the adapter. */
+  ensureSessionReady?: (sessionId: string) => Promise<void>
 }
 
 function mutate<TValue>(
@@ -98,7 +100,13 @@ export function sendStructuredAgentSessionTurn(
           }
         })
       }
-      return plan.run(ctx)
+      const ensureSessionReady = context.ensureSessionReady
+      return plan.run({
+        ...ctx,
+        ...(ensureSessionReady
+          ? { ensureSessionReady: () => ensureSessionReady(ctx.sessionId) }
+          : {})
+      })
     }
   })
 }
