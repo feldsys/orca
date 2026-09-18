@@ -102,6 +102,9 @@ function resolveLinkedTaskIdentifier(worktree: Worktree): string {
   if (item?.jiraIdentifier) {
     return item.jiraIdentifier
   }
+  if (item?.customIdentifier) {
+    return item.customIdentifier
+  }
   if (item && item.number > 0) {
     return `#${item.number}`
   }

@@ -19,6 +19,7 @@ export function useComposerSubmitOrchestration(
   source: ComposerSourceState
 ): ComposerSubmitState {
   const folderSubmitOrchestration = useFolderSubmitOrchestration({
+    agentPrompt: target.sourceContextState.agentPrompt,
     clearNewWorkspaceDraft: target.composerTargetStore.clearNewWorkspaceDraft,
     createFolderWorkspace: target.composerTargetStore.createFolderWorkspace,
     decisions: target.composerTargetStore.decisions,
