@@ -135,6 +135,11 @@ export class UpdaterSetup extends UpdaterDownloadInstall {
     if (is.dev) {
       return
     }
+    // Why: fork build (feldsys/orca). The release feed below is hard-wired to
+    // stablyai/orca, so an update would replace this fork with upstream.
+    if (process.env.ORCA_ENABLE_UPSTREAM_UPDATES !== '1') {
+      return
+    }
 
     const autoUpdater = this.getAutoUpdater()
     autoUpdater.autoDownload = false
