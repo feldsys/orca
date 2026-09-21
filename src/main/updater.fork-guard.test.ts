@@ -36,6 +36,7 @@ describe('fork update guard', () => {
     const { setupAutoUpdater, checkForUpdates, checkForUpdatesFromMenu, downloadUpdate } =
       await loadUpdaterModule()
 
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the guard returns before touching the window; only webContents.send is ever reached.
     setupAutoUpdater({ webContents: { send: sendMock } } as never, {
       getLastUpdateCheckAt: () => null
     })
