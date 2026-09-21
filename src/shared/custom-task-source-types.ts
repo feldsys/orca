@@ -29,7 +29,10 @@ export const CustomTaskItemSchema = z.object({
 })
 
 export const CustomTaskListOutputSchema = z.object({
-  items: z.array(CustomTaskItemSchema)
+  items: z.array(CustomTaskItemSchema),
+  /** Board columns in display order, matched against item.status. Opts the
+   *  source into the board layout; without it the list stays a flat table. */
+  columns: z.array(z.string().trim().min(1)).optional()
 })
 
 export type CustomTaskSourceConfig = z.infer<typeof CustomTaskSourceConfigSchema>
