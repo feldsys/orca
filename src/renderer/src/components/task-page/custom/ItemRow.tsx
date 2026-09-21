@@ -66,41 +66,56 @@ export function TaskPageCustomItemRow({
       )}
 
       <div className="flex shrink-0 items-center justify-end gap-1 md:opacity-0 md:transition-opacity md:group-hover/row:opacity-100 md:group-focus-within/row:opacity-100">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => onStart(item)}
-              aria-label={translate(
-                'auto.components.TaskPage.ff90d0abc7',
-                'Start workspace from {{value0}}',
-                { value0: item.id }
-              )}
-            >
-              <ArrowRight className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={6}>
-            {translate('auto.components.TaskPage.9497f2787c', 'Start workspace')}
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => void window.api.shell.openUrl(item.url)}
-              aria-label={translate('auto.components.TaskPage.c1d1600362', 'Open in browser')}
-            >
-              <ExternalLink className="size-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={6}>
-            {translate('auto.components.TaskPage.c1d1600362', 'Open in browser')}
-          </TooltipContent>
-        </Tooltip>
+        <TaskPageCustomItemActions item={item} onStart={onStart} />
       </div>
     </div>
+  )
+}
+
+/** Start + open, shared by the table row and the board card. */
+export function TaskPageCustomItemActions({
+  item,
+  onStart
+}: {
+  item: CustomTaskItem
+  onStart: (item: CustomTaskItem) => void
+}): React.JSX.Element {
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => onStart(item)}
+            aria-label={translate(
+              'auto.components.TaskPage.ff90d0abc7',
+              'Start workspace from {{value0}}',
+              { value0: item.id }
+            )}
+          >
+            <ArrowRight className="size-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6}>
+          {translate('auto.components.TaskPage.9497f2787c', 'Start workspace')}
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => void window.api.shell.openUrl(item.url)}
+            aria-label={translate('auto.components.TaskPage.c1d1600362', 'Open in browser')}
+          >
+            <ExternalLink className="size-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6}>
+          {translate('auto.components.TaskPage.c1d1600362', 'Open in browser')}
+        </TooltipContent>
+      </Tooltip>
+    </>
   )
 }

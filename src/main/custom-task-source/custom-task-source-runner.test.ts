@@ -78,6 +78,15 @@ describe('listCustomTaskItems', () => {
     })
   })
 
+  it('passes the board columns through when the adapter prints them', async () => {
+    writeSource(printJson({ columns: ['To do', 'Done'], items: [item] }))
+    expect(await listCustomTaskItems('src', undefined, { configPath })).toEqual({
+      ok: true,
+      items: [item],
+      columns: ['To do', 'Done']
+    })
+  })
+
   it('passes the query as ORCA_TASK_QUERY', async () => {
     writeSource(
       `process.stdout.write(JSON.stringify({ items: [{ id: '1', title: process.env.ORCA_TASK_QUERY, url: 'https://t.test/1' }] }))`

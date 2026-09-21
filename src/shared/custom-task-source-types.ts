@@ -53,5 +53,5 @@ export type CustomTasksApi = {
   listItems: (args: {
     sourceId: string
     query?: string
-  }) => Promise<CustomTaskResult<{ items: CustomTaskItem[] }>>
+  }) => Promise<CustomTaskResult<{ items: CustomTaskItem[]; columns?: string[] }>>
 }

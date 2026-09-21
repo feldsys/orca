@@ -8,6 +8,7 @@ import { translate } from '@/i18n/i18n'
 import { cn } from '@/lib/utils'
 import type { CustomTaskItem } from '../../../../../shared/custom-task-source-types'
 import { CUSTOM_TASK_GRID_CLASS, TaskPageCustomItemRow } from './ItemRow'
+import { TaskPageCustomBoard } from './Board'
 
 const SEARCH_DEBOUNCE_MS = 300
 const SOURCES_FILE = '~/.orca/task-sources.json'
@@ -18,6 +19,8 @@ type ItemsLoad = {
   /** Source the items belong to, so a source switch never shows the previous list. */
   sourceId: string | null
   items: CustomTaskItem[]
+  /** Non-empty when the adapter opted into the board layout. */
+  columns: string[]
   loading: boolean
   error: string | null
 }
@@ -53,6 +56,7 @@ export function TaskPageCustomContent({
   const [load, setLoad] = useState<ItemsLoad>({
     sourceId: null,
     items: [],
+    columns: [],
     loading: false,
     error: null
   })
@@ -74,14 +78,26 @@ export function TaskPageCustomContent({
         if (!stale) {
           setLoad(
             result.ok
-              ? { sourceId, items: result.items, loading: false, error: null }
-              : { sourceId, items: [], loading: false, error: result.error }
+              ? {
+                  sourceId,
+                  items: result.items,
+                  columns: result.columns ?? [],
+                  loading: false,
+                  error: null
+                }
+              : { sourceId, items: [], columns: [], loading: false, error: result.error }
           )
         }
       },
       (error: unknown) => {
         if (!stale) {
-          setLoad({ sourceId, items: [], loading: false, error: errorMessage(error) })
+          setLoad({
+            sourceId,
+            items: [],
+            columns: [],
+            loading: false,
+            error: errorMessage(error)
+          })
         }
       }
     )
@@ -135,6 +151,48 @@ export function TaskPageCustomContent({
   const items = load.sourceId === sourceId ? load.items : []
   const loading = load.loading || load.sourceId !== sourceId
   const refresh = (): void => setRefreshNonce((n) => n + 1)
+  // Why: an adapter that prints `columns` gets the board; everything else stays a table.
+  const boardColumns = load.sourceId === sourceId ? load.columns : []
+  const states = (
+    <>
+      {load.error && load.sourceId === sourceId ? (
+        <div className="flex flex-none items-start gap-2 border-b border-border bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 size-4 flex-none" />
+          <div className="min-w-0 flex-1 whitespace-pre-wrap break-words">{load.error}</div>
+          <Button variant="outline" size="xs" onClick={refresh} disabled={loading}>
+            {translate('auto.components.TaskPage.0bfbf62f75', 'Retry')}
+          </Button>
+        </div>
+      ) : null}
+
+      {loading && items.length === 0 ? (
+        <div className="flex-none divide-y divide-border/50">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="px-3 py-3">
+              <div className="h-4 w-4/5 animate-pulse rounded bg-muted/70" />
+              <div className="mt-2 h-3 w-3/5 animate-pulse rounded bg-muted/60" />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!loading && items.length === 0 && !load.error ? (
+        <div className="flex-none px-4 py-10 text-center">
+          <p className="text-sm font-medium text-foreground">
+            {translate('auto.components.TaskPage.customNoItems', 'No tasks found')}
+          </p>
+          {query ? (
+            <p className="mt-2 text-sm text-muted-foreground">
+              {translate(
+                'auto.components.TaskPage.customNoItemsForQuery',
+                'Try a different search.'
+              )}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  )
   return (
     <div className="mt-2 flex min-h-0 max-h-full flex-col">
       <div className="flex-none rounded-md rounded-b-none border border-border/50 bg-muted/50 px-3 py-2 shadow-sm">
@@ -180,7 +238,13 @@ export function TaskPageCustomContent({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-col overflow-hidden rounded-md rounded-t-none border border-t-0 border-border/50 bg-background shadow-sm">
+      <div
+        className={cn(
+          'flex min-h-0 flex-col overflow-hidden rounded-md rounded-t-none border border-t-0 border-border/50 bg-background shadow-sm',
+          // Why: the board's columns scroll on their own, so the card must own the height.
+          boardColumns.length > 0 && 'flex-1'
+        )}
+      >
         <div className="flex h-10 flex-none items-center justify-between gap-3 border-b border-border/50 bg-muted/35 px-3">
           <div className="min-w-0 truncate text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
             {source.name}
@@ -190,69 +254,47 @@ export function TaskPageCustomContent({
           </div>
         </div>
 
-        <div
-          className={cn(
-            'h-8 flex-none border-b border-border/50 bg-muted/25 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground max-md:!hidden',
-            CUSTOM_TASK_GRID_CLASS
-          )}
-        >
-          <span>{translate('auto.components.TaskPage.eb10c32872', 'ID')}</span>
-          <span>{translate('auto.components.TaskPage.16cba35bee', 'Title')}</span>
-          <span>{translate('auto.components.TaskPage.154b0fa623', 'Status')}</span>
-          <span className="max-lg:!hidden">
-            {translate('auto.components.TaskPage.d2a876ca53', 'Assignee')}
-          </span>
-          <span>{translate('auto.components.TaskPage.f362667d55', 'Updated')}</span>
-          <span />
-        </div>
-
-        <div
-          className="min-h-0 flex-1 overflow-y-auto scrollbar-sleek"
-          style={{ scrollbarGutter: 'stable' }}
-        >
-          {load.error && load.sourceId === sourceId ? (
-            <div className="flex items-start gap-2 border-b border-border bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              <AlertCircle className="mt-0.5 size-4 flex-none" />
-              <div className="min-w-0 flex-1 whitespace-pre-wrap break-words">{load.error}</div>
-              <Button variant="outline" size="xs" onClick={refresh} disabled={loading}>
-                {translate('auto.components.TaskPage.0bfbf62f75', 'Retry')}
-              </Button>
+        {boardColumns.length > 0 ? (
+          <>
+            {states}
+            <TaskPageCustomBoard
+              items={items}
+              columns={boardColumns}
+              onStart={handleUseCustomItem}
+            />
+          </>
+        ) : (
+          <>
+            <div
+              className={cn(
+                'h-8 flex-none border-b border-border/50 bg-muted/25 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground max-md:!hidden',
+                CUSTOM_TASK_GRID_CLASS
+              )}
+            >
+              <span>{translate('auto.components.TaskPage.eb10c32872', 'ID')}</span>
+              <span>{translate('auto.components.TaskPage.16cba35bee', 'Title')}</span>
+              <span>{translate('auto.components.TaskPage.154b0fa623', 'Status')}</span>
+              <span className="max-lg:!hidden">
+                {translate('auto.components.TaskPage.d2a876ca53', 'Assignee')}
+              </span>
+              <span>{translate('auto.components.TaskPage.f362667d55', 'Updated')}</span>
+              <span />
             </div>
-          ) : null}
 
-          {loading && items.length === 0 ? (
-            <div className="divide-y divide-border/50">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="px-3 py-3">
-                  <div className="h-4 w-4/5 animate-pulse rounded bg-muted/70" />
-                  <div className="mt-2 h-3 w-3/5 animate-pulse rounded bg-muted/60" />
-                </div>
-              ))}
+            <div
+              className="min-h-0 flex-1 overflow-y-auto scrollbar-sleek"
+              style={{ scrollbarGutter: 'stable' }}
+            >
+              {states}
+
+              <div className="divide-y divide-border/50">
+                {items.map((item) => (
+                  <TaskPageCustomItemRow key={item.id} item={item} onStart={handleUseCustomItem} />
+                ))}
+              </div>
             </div>
-          ) : null}
-
-          {!loading && items.length === 0 && !load.error ? (
-            <div className="px-4 py-10 text-center">
-              <p className="text-sm font-medium text-foreground">
-                {translate('auto.components.TaskPage.customNoItems', 'No tasks found')}
-              </p>
-              {query ? (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {translate(
-                    'auto.components.TaskPage.customNoItemsForQuery',
-                    'Try a different search.'
-                  )}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-
-          <div className="divide-y divide-border/50">
-            {items.map((item) => (
-              <TaskPageCustomItemRow key={item.id} item={item} onStart={handleUseCustomItem} />
-            ))}
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

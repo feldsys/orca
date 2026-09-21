@@ -86,7 +86,7 @@ export async function listCustomTaskItems(
   sourceId: string,
   query: string | undefined,
   options: CustomTaskRunnerOptions = {}
-): Promise<CustomTaskResult<{ items: CustomTaskItem[] }>> {
+): Promise<CustomTaskResult<{ items: CustomTaskItem[]; columns?: string[] }>> {
   const loaded = await readSources(options.configPath ?? getCustomTaskSourcesPath())
   if (!loaded.ok) {
     return loaded
@@ -144,5 +144,5 @@ export async function listCustomTaskItems(
       error: `${source.name} printed invalid items: ${describeIssue(parsed.error)}`
     }
   }
-  return { ok: true, items: parsed.data.items }
+  return { ok: true, items: parsed.data.items, columns: parsed.data.columns }
 }
